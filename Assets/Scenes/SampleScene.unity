@@ -359,6 +359,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
   comboWindow: 0.6
+  attackDuration: 0.35
 --- !u!1 &904035607
 GameObject:
   m_ObjectHideFlags: 0
