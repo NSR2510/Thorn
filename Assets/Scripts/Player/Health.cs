@@ -22,6 +22,7 @@ public class Health : MonoBehaviour
         currentHealth = maxHealth;
     }
 
+
     /// <summary>
     /// Apply damage to this entity.
     /// </summary>

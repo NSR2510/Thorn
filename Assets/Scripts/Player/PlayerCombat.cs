@@ -204,11 +204,18 @@ public class PlayerCombat : MonoBehaviour
             {
                 enemyHealth.TakeDamage(attackDamage);
                 Debug.Log($"{name} hit enemy {enemyHealth.name} for {attackDamage} damage. Enemy HP: {enemyHealth.CurrentHealth}/{enemyHealth.MaxHealth}");
+                continue;
             }
-            else
+
+            Boss_HP bossHealth = hit.GetComponentInParent<Boss_HP>();
+            if (bossHealth != null)
             {
-                Debug.LogWarning($"{name} hit {hit.name} but no EnemyHealth found on the target.");
+                bossHealth.TakeDamage(attackDamage);
+                Debug.Log($"{name} hit boss {bossHealth.name} for {attackDamage} damage. Boss HP: {bossHealth.CurrentHealth}/{bossHealth.MaxHealth}");
+                continue;
             }
+
+            Debug.LogWarning($"{name} hit {hit.name} but no EnemyHealth or Boss_HP found on the target.");
         }
     }
 
