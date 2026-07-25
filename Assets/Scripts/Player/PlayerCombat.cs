@@ -6,15 +6,32 @@ public class PlayerCombat : MonoBehaviour
 {
     [Header("Combat Settings")]
     [SerializeField] private float comboWindow = 0.6f; // time to chain Attack 1 -> Attack 2
-    [SerializeField] private float attackDuration = 0.35f; // how long the attack state/animation lasts
+    [SerializeField] private float attackDuration = 0.4f; // how long the attack state/animation lasts
+    [SerializeField] private float attackCooldown = 0.4f; // prevent m1 spam
+    [SerializeField] private float attackDamageDelay = 0.2f; // damage lands at this time into the animation
+    [SerializeField] private float attackDamage = 10f;
+
+    [Header("Attack Hitboxes")]
+    [SerializeField] private Collider2D attackLeftHitbox;
+    [SerializeField] private Collider2D attackRightHitbox;
+
+    [Header("Block Hitboxes")]
+    [SerializeField] private Collider2D blockLeftHitbox;
+    [SerializeField] private Collider2D blockRightHitbox;
 
     private Animator animator;
+    private SpriteRenderer spriteRenderer;
     private InputAction attackAction;
     private InputAction guardAction;
 
     private bool comboReady = false;
     private float comboTimer = 0f;
     private float attackTimer = 0f;
+    private float attackCooldownTimer = 0f;
+    private float attackDamageDelayTimer = 0f;
+    private bool attackDamageApplied = false;
+    private ContactFilter2D attackContactFilter;
+    private Collider2D[] attackHitResults = new Collider2D[8];
     private bool isGuarding = false;
 
     public bool IsAttacking => attackTimer > 0f;
@@ -23,6 +40,12 @@ public class PlayerCombat : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+
+        attackContactFilter = new ContactFilter2D();
+        attackContactFilter.useTriggers = true;
+        attackContactFilter.useLayerMask = false;
+        attackContactFilter.useDepth = false;
 
         if (InputSystem.actions != null)
         {
@@ -35,6 +58,9 @@ public class PlayerCombat : MonoBehaviour
                 attackAction.performed += OnAttack;
             }
         }
+
+        UpdateAttackHitboxState();
+        UpdateBlockHitboxState();
     }
 
     void OnDestroy()
@@ -52,8 +78,8 @@ public class PlayerCombat : MonoBehaviour
 
     private void PerformAttack()
     {
-        // Don't allow attacking while guarding
-        if (isGuarding) return;
+        // Don't allow attacking while guarding or spamming.
+        if (isGuarding || attackCooldownTimer > 0f || attackTimer > 0f) return;
 
         if (comboReady)
         {
@@ -68,6 +94,9 @@ public class PlayerCombat : MonoBehaviour
         }
 
         attackTimer = attackDuration;
+        attackCooldownTimer = attackCooldown;
+        attackDamageDelayTimer = attackDamageDelay;
+        attackDamageApplied = false;
     }
 
     void Update()
@@ -92,11 +121,33 @@ public class PlayerCombat : MonoBehaviour
             }
         }
 
+        if (attackCooldownTimer > 0f)
+        {
+            attackCooldownTimer -= Time.deltaTime;
+        }
+
+        if (attackDamageDelayTimer > 0f)
+        {
+            attackDamageDelayTimer -= Time.deltaTime;
+        }
+
         // Active attack state countdown
         if (attackTimer > 0f)
         {
             attackTimer -= Time.deltaTime;
+
+            if (!attackDamageApplied && attackDamageDelayTimer <= 0f)
+            {
+                ApplyPendingAttack();
+            }
+
+            if (attackTimer <= 0f)
+            {
+                attackTimer = 0f;
+            }
         }
+
+        UpdateAttackHitboxState();
 
         // Guard / Block logic
         isGuarding = false;
@@ -113,12 +164,113 @@ public class PlayerCombat : MonoBehaviour
             }
         }
 
+        UpdateBlockHitboxState();
+
         if (animator != null)
         {
             if (isGuarding && !IsAttacking)
             {
                 animator.Play("Guard");
             }
+        }
+    }
+
+    private void ApplyPendingAttack()
+    {
+        attackDamageApplied = true;
+
+        Collider2D hitbox = GetCurrentAttackHitbox();
+        if (hitbox == null)
+        {
+            return;
+        }
+
+        int hitCount = hitbox.Overlap(attackContactFilter, attackHitResults);
+        if (hitCount == 0)
+        {
+            Debug.Log($"{name} attack hitbox overlapped no targets.");
+        }
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            Collider2D hit = attackHitResults[i];
+            if (hit == null || hit.gameObject == gameObject)
+            {
+                continue;
+            }
+
+            EnemyHealth enemyHealth = hit.GetComponentInParent<EnemyHealth>();
+            if (enemyHealth != null)
+            {
+                enemyHealth.TakeDamage(attackDamage);
+                Debug.Log($"{name} hit enemy {enemyHealth.name} for {attackDamage} damage. Enemy HP: {enemyHealth.CurrentHealth}/{enemyHealth.MaxHealth}");
+            }
+            else
+            {
+                Debug.LogWarning($"{name} hit {hit.name} but no EnemyHealth found on the target.");
+            }
+        }
+    }
+
+    private Collider2D GetCurrentAttackHitbox()
+    {
+        if (attackLeftHitbox == null || attackRightHitbox == null)
+        {
+            return attackRightHitbox != null ? attackRightHitbox : attackLeftHitbox;
+        }
+
+        if (spriteRenderer != null && spriteRenderer.flipX)
+        {
+            return attackLeftHitbox;
+        }
+
+        return attackRightHitbox;
+    }
+
+    public Collider2D GetCurrentBlockHitbox()
+    {
+        if (blockLeftHitbox == null || blockRightHitbox == null)
+        {
+            return blockRightHitbox != null ? blockRightHitbox : blockLeftHitbox;
+        }
+
+        if (spriteRenderer != null && spriteRenderer.flipX)
+        {
+            return blockLeftHitbox;
+        }
+
+        return blockRightHitbox;
+    }
+
+    private void UpdateAttackHitboxState()
+    {
+        bool leftActive = IsAttacking && spriteRenderer != null && spriteRenderer.flipX;
+        bool rightActive = IsAttacking && spriteRenderer != null && !spriteRenderer.flipX;
+
+        if (attackLeftHitbox != null)
+        {
+            attackLeftHitbox.enabled = leftActive;
+        }
+
+        if (attackRightHitbox != null)
+        {
+            attackRightHitbox.enabled = rightActive;
+        }
+    }
+
+    private void UpdateBlockHitboxState()
+    {
+        bool leftActive = isGuarding && spriteRenderer != null && spriteRenderer.flipX;
+        bool rightActive = isGuarding && spriteRenderer != null && !spriteRenderer.flipX;
+
+        if (blockLeftHitbox != null)
+        {
+            blockLeftHitbox.enabled = leftActive;
+        }
+
+        if (blockRightHitbox != null)
+        {
+            blockRightHitbox.enabled = rightActive;
         }
     }
 }
