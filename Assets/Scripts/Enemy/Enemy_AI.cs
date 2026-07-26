@@ -313,6 +313,7 @@ public class Enemy_AI : MonoBehaviour
                     if (overlap == enemyAttackHitbox)
                     {
                         Debug.Log($"{name} attack was blocked by {player.name}.");
+                        playerCombat.OnBlockSuccessful();
                         return;
                     }
                 }

@@ -19,6 +19,13 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private Collider2D blockLeftHitbox;
     [SerializeField] private Collider2D blockRightHitbox;
 
+    [Header("Block Durability Settings")]
+    [SerializeField] private int maxBlockCharges = 3;
+    [SerializeField] private float guardBreakDuration = 1.5f;
+
+    private int currentBlockCharges;
+    private float guardBreakCooldownTimer = 0f;
+
     private Animator animator;
     private SpriteRenderer spriteRenderer;
     private InputAction attackAction;
@@ -36,6 +43,9 @@ public class PlayerCombat : MonoBehaviour
 
     public bool IsAttacking => attackTimer > 0f;
     public bool IsGuarding => isGuarding;
+    public int CurrentBlockCharges => currentBlockCharges;
+    public int MaxBlockCharges => maxBlockCharges;
+    public bool IsGuardBroken => guardBreakCooldownTimer > 0f;
 
     void Start()
     {
@@ -150,18 +160,33 @@ public class PlayerCombat : MonoBehaviour
         UpdateAttackHitboxState();
 
         // Guard / Block logic
+        bool wasGuarding = isGuarding;
         isGuarding = false;
-        if (guardAction != null)
+
+        if (guardBreakCooldownTimer > 0f)
         {
-            isGuarding = guardAction.IsPressed();
+            guardBreakCooldownTimer -= Time.deltaTime;
         }
         else
         {
-            var mouse = Mouse.current;
-            if (mouse != null)
+            if (guardAction != null)
             {
-                isGuarding = mouse.rightButton.isPressed;
+                isGuarding = guardAction.IsPressed();
             }
+            else
+            {
+                var mouse = Mouse.current;
+                if (mouse != null)
+                {
+                    isGuarding = mouse.rightButton.isPressed;
+                }
+            }
+        }
+
+        // If we just started guarding, reset charges to max
+        if (isGuarding && !wasGuarding)
+        {
+            currentBlockCharges = maxBlockCharges;
         }
 
         UpdateBlockHitboxState();
@@ -172,6 +197,32 @@ public class PlayerCombat : MonoBehaviour
             {
                 animator.Play("Guard");
             }
+        }
+    }
+
+    public void OnBlockSuccessful()
+    {
+        if (!isGuarding) return;
+
+        currentBlockCharges--;
+        Debug.Log($"Attack blocked! Remaining block charges: {currentBlockCharges}/{maxBlockCharges}");
+
+        if (currentBlockCharges <= 0)
+        {
+            BreakGuard();
+        }
+    }
+
+    private void BreakGuard()
+    {
+        isGuarding = false;
+        guardBreakCooldownTimer = guardBreakDuration;
+        currentBlockCharges = 0;
+        Debug.Log("Guard broken! Player block disabled for " + guardBreakDuration + " seconds.");
+
+        if (animator != null)
+        {
+            animator.Play("Idle");
         }
     }
 
