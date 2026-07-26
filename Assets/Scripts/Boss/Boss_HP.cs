@@ -43,6 +43,18 @@ public class Boss_HP : MonoBehaviour
         onHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
+    /// <summary>
+    /// Set the boss's max health and fully heal them.
+    /// </summary>
+    /// <param name="amount">New max health amount.</param>
+    public void SetMaxHealth(float amount)
+    {
+        maxHealth = amount;
+        currentHealth = amount;
+        onHealthChanged?.Invoke(currentHealth, maxHealth);
+        Debug.Log($"{gameObject.name} max health configured to {maxHealth}");
+    }
+
     private void Die()
     {
         isDead = true;

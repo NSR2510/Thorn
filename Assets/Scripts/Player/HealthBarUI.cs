@@ -10,6 +10,7 @@ public class HealthBarUI : MonoBehaviour
     [Header("UI Components")]
     [SerializeField] private Slider healthSlider;
     [SerializeField] private TextMeshProUGUI healthText;
+    [SerializeField] private TextMeshProUGUI damageText;
     [SerializeField] private Image fillImage;
 
     [Header("Visual Settings")]
@@ -21,6 +22,9 @@ public class HealthBarUI : MonoBehaviour
     private float targetValue;
     private float lastHealth;
     private float flashTimer;
+
+    private PlayerCombat playerCombat;
+    private float lastDamage = -1f;
 
     private void Start()
     {
@@ -69,6 +73,10 @@ public class HealthBarUI : MonoBehaviour
 
             // Subscribe to health change events
             playerHealth.onHealthChanged.AddListener(UpdateHealthUI);
+
+            // Find PlayerCombat
+            playerCombat = playerHealth.GetComponent<PlayerCombat>();
+            UpdateDamageText();
         }
         else
         {
@@ -95,6 +103,27 @@ public class HealthBarUI : MonoBehaviour
             else if (fillImage != null)
             {
                 fillImage.color = normalColor;
+            }
+        }
+
+        // Keep damage text updated
+        UpdateDamageText();
+    }
+
+    private void UpdateDamageText()
+    {
+        if (playerCombat == null && playerHealth != null)
+        {
+            playerCombat = playerHealth.GetComponent<PlayerCombat>();
+        }
+
+        if (playerCombat != null && damageText != null)
+        {
+            float currentDamage = playerCombat.AttackDamage;
+            if (currentDamage != lastDamage)
+            {
+                lastDamage = currentDamage;
+                damageText.text = $"DAMAGE: {currentDamage}";
             }
         }
     }

@@ -46,6 +46,7 @@ public class PlayerCombat : MonoBehaviour
     public int CurrentBlockCharges => currentBlockCharges;
     public int MaxBlockCharges => maxBlockCharges;
     public bool IsGuardBroken => guardBreakCooldownTimer > 0f;
+    public float AttackDamage => attackDamage;
 
     void Start()
     {
@@ -330,5 +331,15 @@ public class PlayerCombat : MonoBehaviour
         {
             blockRightHitbox.enabled = rightActive;
         }
+    }
+
+    /// <summary>
+    /// Increase player's attack damage.
+    /// </summary>
+    /// <param name="amount">Amount of damage to add.</param>
+    public void IncreaseDamage(float amount)
+    {
+        attackDamage += amount;
+        Debug.Log($"{name} attack damage increased to {attackDamage}");
     }
 }

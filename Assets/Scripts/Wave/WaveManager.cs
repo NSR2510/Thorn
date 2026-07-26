@@ -17,10 +17,10 @@ public class WaveManager : MonoBehaviour
     [Header("Wave Settings")]
     [SerializeField] private float waveCooldown = 10f;
     [SerializeField] private int totalWaves = 18;
-    [SerializeField] private int maxEnemiesPerWave = 20;
 
     [Header("UI Reference")]
     [SerializeField] private WaveUIDisplay uiDisplay;
+    [SerializeField] private BossUpgradeUI bossUpgradeUI;
 
     [Header("Events")]
     public UnityEngine.Events.UnityEvent onGameWon;
@@ -36,10 +36,15 @@ public class WaveManager : MonoBehaviour
     {
         if (uiDisplay == null)
         {
-            uiDisplay = Object.FindAnyObjectByType<WaveUIDisplay>();
+            uiDisplay = UnityEngine.Object.FindAnyObjectByType<WaveUIDisplay>();
         }
 
-        playerHealth = Object.FindAnyObjectByType<Health>();
+        if (bossUpgradeUI == null)
+        {
+            bossUpgradeUI = UnityEngine.Object.FindAnyObjectByType<BossUpgradeUI>();
+        }
+
+        playerHealth = UnityEngine.Object.FindAnyObjectByType<Health>();
 
         // Start the wave system with the cooldown before Wave 1
         StartCoroutine(StartFirstWaveDelayed());
@@ -136,8 +141,19 @@ public class WaveManager : MonoBehaviour
 
             if (prefabToSpawn != null)
             {
-                // Linear progression: adds 5 more enemies each wave, capped at maxEnemiesPerWave
-                int spawnCount = Mathf.Min(5 * currentWave, maxEnemiesPerWave);
+                // Calculate wave index relative to the start of the current tier (1 to 5)
+                int relativeWaveIndex = currentWave;
+                if (currentWave >= 7 && currentWave <= 11)
+                {
+                    relativeWaveIndex = currentWave - 6;
+                }
+                else if (currentWave >= 13 && currentWave <= 17)
+                {
+                    relativeWaveIndex = currentWave - 12;
+                }
+
+                // Spawns 5, 10, 15, 20, 25 enemies dynamically per tier
+                int spawnCount = 5 * relativeWaveIndex;
                 SpawnEnemies(prefabToSpawn, spawnCount);
             }
         }
@@ -174,10 +190,21 @@ public class WaveManager : MonoBehaviour
         GameObject boss = Instantiate(bossPrefab, spawnPos, Quaternion.identity);
         activeEnemiesCount = 1;
 
-        // Bind death listener
+        // Calculate Boss Max HP dynamically based on round:
+        // Round 6: 200 HP
+        // Round 12: 300 HP
+        // Round 18: 400 HP (+100 HP per boss wave after Round 6)
+        float bossMaxHP = 200f;
+        if (currentWave >= 6)
+        {
+            bossMaxHP = 200f + Mathf.RoundToInt((currentWave - 6) / 6f) * 100f;
+        }
+
+        // Bind death listener and configure HP
         Boss_HP health = boss.GetComponent<Boss_HP>();
         if (health != null)
         {
+            health.SetMaxHealth(bossMaxHP);
             health.onDeath.AddListener(() => OnEnemyKilled());
         }
     }
@@ -195,10 +222,11 @@ public class WaveManager : MonoBehaviour
         {
             isWaveInProgress = false;
 
+            bool isBossWave = (currentWave == 6 || currentWave == 12 || currentWave == 18);
+
             // Heal player upon wave completion
             if (playerHealth != null)
             {
-                bool isBossWave = (currentWave == 6 || currentWave == 12 || currentWave == 18);
                 if (isBossWave)
                 {
                     playerHealth.Heal(100f);
@@ -207,10 +235,40 @@ public class WaveManager : MonoBehaviour
                 {
                     playerHealth.Heal(70f);
                 }
+
+                // Survived round rewards: +10 Max HP, +1 Damage
+                playerHealth.IncreaseMaxHealth(10f);
+                PlayerCombat combat = playerHealth.GetComponent<PlayerCombat>();
+                if (combat != null)
+                {
+                    combat.IncreaseDamage(1f);
+                }
             }
 
-            // Cooldown starts after wave is cleared
-            StartCoroutine(StartCooldown());
+            if (isBossWave)
+            {
+                if (bossUpgradeUI == null)
+                {
+                    bossUpgradeUI = UnityEngine.Object.FindAnyObjectByType<BossUpgradeUI>();
+                }
+
+                if (bossUpgradeUI != null)
+                {
+                    bossUpgradeUI.ShowUpgradeScreen(() => {
+                        StartCoroutine(StartCooldown());
+                    });
+                }
+                else
+                {
+                    Debug.LogWarning("WaveManager: BossUpgradeUI not found! Starting cooldown directly.");
+                    StartCoroutine(StartCooldown());
+                }
+            }
+            else
+            {
+                // Cooldown starts after wave is cleared
+                StartCoroutine(StartCooldown());
+            }
         }
     }
 
@@ -219,5 +277,82 @@ public class WaveManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f); // Brief delay for game feel before timer starts
         cooldownTimer = waveCooldown;
         isCooldownActive = true;
+    }
+
+    /// <summary>
+    /// Starts the Special Infinite cascade mode (Wave 99).
+    /// </summary>
+    public void StartSpecialMode()
+    {
+        StopAllCoroutines();
+        isCooldownActive = false;
+        isWaveInProgress = true;
+        currentWave = 99;
+
+        if (uiDisplay != null)
+        {
+            uiDisplay.UpdateWave(99);
+        }
+
+        activeEnemiesCount = 0;
+        
+        // Spawn the first 1 HP gnome in the center of the arena
+        Vector3 spawnPos = new Vector3(spawnCenter.x, spawnCenter.y, 0f);
+        SpawnSpecialGnome(spawnPos);
+        activeEnemiesCount = 1;
+
+        if (uiDisplay != null)
+        {
+            uiDisplay.UpdateEnemyCount(activeEnemiesCount);
+        }
+
+        Debug.Log("Special Infinite Mode (Wave 99) Started!");
+    }
+
+    private void SpawnSpecialGnome(Vector3 pos)
+    {
+        GameObject enemy = Instantiate(gnomePrefab, pos, Quaternion.identity);
+        
+        // Set HP to 1 dynamically
+        EnemyHealth health = enemy.GetComponent<EnemyHealth>();
+        if (health != null)
+        {
+            health.SetMaxHealth(1f);
+            health.onDeath.AddListener(() => OnSpecialGnomeKilled(enemy.transform.position));
+        }
+
+        // Apply a cool visual effect so they stand out as Special Gnomes
+        // Tint them dark purple/magenta and shrink their size
+        SpriteRenderer sr = enemy.GetComponent<SpriteRenderer>();
+        if (sr == null) sr = enemy.GetComponentInChildren<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.color = new Color(0.4f, 0.15f, 0.6f, 1f); // Cool neon dark purple
+        }
+
+        // Shrink them to 75% scale to look like swarm minions
+        enemy.transform.localScale = enemy.transform.localScale * 0.75f;
+    }
+
+    private void OnSpecialGnomeKilled(Vector3 deathPos)
+    {
+        activeEnemiesCount = Mathf.Max(0, activeEnemiesCount - 1);
+
+        // Spawn 2 new special 1 HP gnomes near the death position with a small offset
+        float offsetRange = 0.6f;
+        for (int i = 0; i < 2; i++)
+        {
+            float randomX = Random.Range(-offsetRange, offsetRange);
+            float randomY = Random.Range(-offsetRange, offsetRange);
+            Vector3 spawnPos = deathPos + new Vector3(randomX, randomY, 0f);
+
+            SpawnSpecialGnome(spawnPos);
+            activeEnemiesCount++;
+        }
+
+        if (uiDisplay != null)
+        {
+            uiDisplay.UpdateEnemyCount(activeEnemiesCount);
+        }
     }
 }

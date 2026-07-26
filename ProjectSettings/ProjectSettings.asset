@@ -694,11 +694,11 @@ PlayerSettings:
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
   enableDirectStorage: 0
-  cloudProjectId: db8c78c2-7e7b-4016-b9ca-ab20ef262ee7
+  cloudProjectId: 687d679c-4bf2-4a62-b65f-0ce61e43dad6
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Thorn 2026-07-26_02-47-06
-  organizationId: abdulrahman-org
+  projectName: Thorn
+  organizationId: unity_99526c06cb14e441de7b
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}

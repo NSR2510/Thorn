@@ -7,6 +7,11 @@ public class Health : MonoBehaviour
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float currentHealth;
 
+    [Header("Immunity Settings")]
+    [SerializeField] private float immunityDuration = 1.0f;
+    private float immunityTimer = 0f;
+    private SpriteRenderer spriteRenderer;
+
     [Header("Events")]
     public UnityEvent<float, float> onHealthChanged; // passes currentHealth, maxHealth
     public UnityEvent onDeath;
@@ -16,10 +21,44 @@ public class Health : MonoBehaviour
     public float CurrentHealth => currentHealth;
     public float MaxHealth => maxHealth;
     public bool IsDead => isDead;
+    public bool IsImmune => immunityTimer > 0f;
 
     private void Awake()
     {
         currentHealth = maxHealth;
+    }
+
+    private void Start()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        }
+    }
+
+    private void Update()
+    {
+        if (immunityTimer > 0f)
+        {
+            immunityTimer -= Time.deltaTime;
+
+            // Flash effect to visualize immunity period
+            if (spriteRenderer != null)
+            {
+                float flashInterval = 0.1f;
+                bool isVisible = (Mathf.FloorToInt(Time.time / flashInterval) % 2 == 0);
+                spriteRenderer.enabled = isVisible;
+            }
+        }
+        else
+        {
+            // Ensure sprite is visible when immunity ends
+            if (spriteRenderer != null && !spriteRenderer.enabled)
+            {
+                spriteRenderer.enabled = true;
+            }
+        }
     }
 
 
@@ -30,6 +69,7 @@ public class Health : MonoBehaviour
     public void TakeDamage(float damage)
     {
         if (isDead) return;
+        if (immunityTimer > 0f) return; // Ignore damage during immunity window
 
         currentHealth = Mathf.Max(0f, currentHealth - damage);
         onHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -37,6 +77,11 @@ public class Health : MonoBehaviour
         if (currentHealth <= 0f)
         {
             Die();
+        }
+        else
+        {
+            // Activate 1-second immunity period
+            immunityTimer = immunityDuration;
         }
     }
 
@@ -52,9 +97,27 @@ public class Health : MonoBehaviour
         onHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
+    /// <summary>
+    /// Increase max health and heal the player by the same amount.
+    /// </summary>
+    /// <param name="amount">Amount of max health to add.</param>
+    public void IncreaseMaxHealth(float amount)
+    {
+        if (isDead) return;
+
+        maxHealth += amount;
+        currentHealth += amount;
+        onHealthChanged?.Invoke(currentHealth, maxHealth);
+        Debug.Log($"{gameObject.name} max health increased to {maxHealth}. Current health: {currentHealth}");
+    }
+
     private void Die()
     {
         isDead = true;
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.enabled = true;
+        }
         onDeath?.Invoke();
         Debug.Log($"{gameObject.name} has died.");
     }

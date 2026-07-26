@@ -35,6 +35,17 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Set the enemy's max health and fully heal them.
+    /// </summary>
+    /// <param name="amount">New max health amount.</param>
+    public void SetMaxHealth(float amount)
+    {
+        maxHealth = amount;
+        currentHealth = amount;
+        onHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
     public void Heal(float amount)
     {
         if (isDead) return;
