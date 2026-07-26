@@ -1111,7 +1111,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -2329,17 +2329,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaa6aa787d96c4d7190fce8c3944c5ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
-  comboWindow: 0.6
-  attackDuration: 0.4
-  attackCooldown: 0.4
-  attackDamageDelay: 0.2
-  attackDamage: 10
-  attackLeftHitbox: {fileID: 1752040245}
-  attackRightHitbox: {fileID: 1939714492}
-  blockLeftHitbox: {fileID: 1993392501}
-  blockRightHitbox: {fileID: 592274100}
-  maxBlockCharges: 3
-  guardBreakDuration: 1.5
 --- !u!114 &749297952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2352,7 +2341,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 287c445a77d0e4058bf678d8d33da4be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  speed: 5
 --- !u!61 &749297955
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2429,10 +2417,10 @@ MonoBehaviour:
   attackCooldown: 0.4
   attackDamageDelay: 0.2
   attackDamage: 10000
-  attackLeftHitbox: {fileID: 0}
-  attackRightHitbox: {fileID: 0}
-  blockLeftHitbox: {fileID: 0}
-  blockRightHitbox: {fileID: 0}
+  attackLeftHitbox: {fileID: 1752040245}
+  attackRightHitbox: {fileID: 1939714492}
+  blockLeftHitbox: {fileID: 1993392501}
+  blockRightHitbox: {fileID: 592274100}
   maxBlockCharges: 3
   guardBreakDuration: 1.5
 --- !u!1 &760991760
@@ -5165,7 +5153,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -5303,7 +5291,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
