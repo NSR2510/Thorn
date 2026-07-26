@@ -1267,6 +1267,8 @@ MonoBehaviour:
   attackRightHitbox: {fileID: 0}
   blockLeftHitbox: {fileID: 0}
   blockRightHitbox: {fileID: 0}
+  maxBlockCharges: 3
+  guardBreakDuration: 1.5
 --- !u!114 &749297952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1360,6 +1362,8 @@ MonoBehaviour:
   attackRightHitbox: {fileID: 1939714492}
   blockLeftHitbox: {fileID: 1993392501}
   blockRightHitbox: {fileID: 592274100}
+  maxBlockCharges: 3
+  guardBreakDuration: 1.5
 --- !u!1 &760991760
 GameObject:
   m_ObjectHideFlags: 0
@@ -4787,6 +4791,7 @@ MonoBehaviour:
   spawnRange: {x: 1, y: 2}
   waveCooldown: 10
   totalWaves: 18
+  maxEnemiesPerWave: 20
   uiDisplay: {fileID: 1100192639}
 --- !u!4 &1619275681
 Transform:

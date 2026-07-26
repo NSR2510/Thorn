@@ -4353,11 +4353,11 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2003393958}
         m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
-        m_MethodName: OpenSettings
+        m_MethodName: ExitGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -6266,12 +6266,12 @@ MonoBehaviour:
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
-        m_CallState: 1
+        m_CallState: 2
 --- !u!114 &1745875562
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7090,9 +7090,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42f46a99372ca1e418c524b1fbb25360, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuManager
-  gameSceneName: SampleScene
+  gameSceneName: MainGame
   settingsSceneName: 
   settingsPanel: {fileID: 592125215}
+  menuMusic: {fileID: 0}
 --- !u!114 &2003393959
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7195,11 +7196,11 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2003393958}
         m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
-        m_MethodName: ExitGame
+        m_MethodName: OpenSettings
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 

@@ -17,6 +17,7 @@ public class WaveManager : MonoBehaviour
     [Header("Wave Settings")]
     [SerializeField] private float waveCooldown = 10f;
     [SerializeField] private int totalWaves = 18;
+    [SerializeField] private int maxEnemiesPerWave = 20;
 
     [Header("UI Reference")]
     [SerializeField] private WaveUIDisplay uiDisplay;
@@ -131,8 +132,8 @@ public class WaveManager : MonoBehaviour
 
             if (prefabToSpawn != null)
             {
-                // Linear progression: adds 5 more enemies each wave (i.e., spawnCount = 5 * currentWave)
-                int spawnCount = 5 * currentWave;
+                // Linear progression: adds 5 more enemies each wave, capped at maxEnemiesPerWave
+                int spawnCount = Mathf.Min(5 * currentWave, maxEnemiesPerWave);
                 SpawnEnemies(prefabToSpawn, spawnCount);
             }
         }
