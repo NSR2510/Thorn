@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 public class MainMenuManager : MonoBehaviour
 {
     [Header("Scene Names (must match names in Build Settings)")]
-    [SerializeField] private string gameSceneName = "SampleScene";
+    [SerializeField] private string gameSceneName = "Main Game";
     [SerializeField] private string settingsSceneName = "SettingsScene";
 
     [Header("Optional: Settings Panel Instead of a Scene")]
