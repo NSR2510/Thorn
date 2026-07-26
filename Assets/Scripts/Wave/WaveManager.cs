@@ -22,6 +22,9 @@ public class WaveManager : MonoBehaviour
     [Header("UI Reference")]
     [SerializeField] private WaveUIDisplay uiDisplay;
 
+    [Header("Events")]
+    public UnityEngine.Events.UnityEvent onGameWon;
+
     private int currentWave = 0;
     private int activeEnemiesCount = 0;
     private float cooldownTimer = 0f;
@@ -88,6 +91,7 @@ public class WaveManager : MonoBehaviour
             {
                 uiDisplay.UpdateEnemyCount(0);
             }
+            onGameWon?.Invoke();
             return;
         }
 
