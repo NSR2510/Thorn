@@ -23,6 +23,10 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private int maxBlockCharges = 3;
     [SerializeField] private float guardBreakDuration = 1.5f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip swordSwingSound;
+
+    private AudioSource audioSource;
     private int currentBlockCharges;
     private float guardBreakCooldownTimer = 0f;
 
@@ -52,6 +56,12 @@ public class PlayerCombat : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
 
         attackContactFilter = new ContactFilter2D();
         attackContactFilter.useTriggers = true;
@@ -91,6 +101,11 @@ public class PlayerCombat : MonoBehaviour
     {
         // Don't allow attacking while guarding or spamming.
         if (isGuarding || attackCooldownTimer > 0f || attackTimer > 0f) return;
+
+        if (audioSource != null && swordSwingSound != null)
+        {
+            audioSource.PlayOneShot(swordSwingSound);
+        }
 
         if (comboReady)
         {
@@ -256,6 +271,10 @@ public class PlayerCombat : MonoBehaviour
             {
                 enemyHealth.TakeDamage(attackDamage);
                 Debug.Log($"{name} hit enemy {enemyHealth.name} for {attackDamage} damage. Enemy HP: {enemyHealth.CurrentHealth}/{enemyHealth.MaxHealth}");
+                if (PlayerElementalManager.Instance != null)
+                {
+                    PlayerElementalManager.Instance.TryApplyElemental(enemyHealth.gameObject);
+                }
                 continue;
             }
 
@@ -264,6 +283,10 @@ public class PlayerCombat : MonoBehaviour
             {
                 bossHealth.TakeDamage(attackDamage);
                 Debug.Log($"{name} hit boss {bossHealth.name} for {attackDamage} damage. Boss HP: {bossHealth.CurrentHealth}/{bossHealth.MaxHealth}");
+                if (PlayerElementalManager.Instance != null)
+                {
+                    PlayerElementalManager.Instance.TryApplyElemental(bossHealth.gameObject);
+                }
                 continue;
             }
 

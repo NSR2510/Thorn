@@ -49,7 +49,7 @@ public class Boss_AI : MonoBehaviour
     private bool hasSecondSwingTriggered;
     private bool isDead;
 
-    void Awake()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
@@ -58,6 +58,14 @@ public class Boss_AI : MonoBehaviour
 
         rb.gravityScale = 0f;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+    }
+
+    /// <summary>
+    /// Set the boss's attack damage amount dynamically.
+    /// </summary>
+    public void SetDamageAmount(float amount)
+    {
+        damageAmount = amount;
     }
 
     void Start()

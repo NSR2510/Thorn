@@ -21,6 +21,7 @@ public class WaveManager : MonoBehaviour
     [Header("UI Reference")]
     [SerializeField] private WaveUIDisplay uiDisplay;
     [SerializeField] private BossUpgradeUI bossUpgradeUI;
+    [SerializeField] private ElementalSelectionUI elementalSelectionUI;
 
     [Header("Events")]
     public UnityEngine.Events.UnityEvent onGameWon;
@@ -42,6 +43,11 @@ public class WaveManager : MonoBehaviour
         if (bossUpgradeUI == null)
         {
             bossUpgradeUI = UnityEngine.Object.FindAnyObjectByType<BossUpgradeUI>();
+        }
+
+        if (elementalSelectionUI == null)
+        {
+            elementalSelectionUI = UnityEngine.Object.FindAnyObjectByType<ElementalSelectionUI>();
         }
 
         playerHealth = UnityEngine.Object.FindAnyObjectByType<Health>();
@@ -190,14 +196,33 @@ public class WaveManager : MonoBehaviour
         GameObject boss = Instantiate(bossPrefab, spawnPos, Quaternion.identity);
         activeEnemiesCount = 1;
 
-        // Calculate Boss Max HP dynamically based on round:
-        // Round 6: 200 HP
-        // Round 12: 300 HP
-        // Round 18: 400 HP (+100 HP per boss wave after Round 6)
-        float bossMaxHP = 200f;
-        if (currentWave >= 6)
+        // Calculate Boss Max HP and Damage dynamically based on current wave:
+        // Wave 6: HP 300, Damage 50
+        // Wave 12: HP 400, Damage 60
+        // Wave 18: HP 500, Damage 70
+        float bossMaxHP = 300f;
+        float bossDamage = 50f;
+
+        if (currentWave == 6)
         {
-            bossMaxHP = 200f + Mathf.RoundToInt((currentWave - 6) / 6f) * 100f;
+            bossMaxHP = 300f;
+            bossDamage = 50f;
+        }
+        else if (currentWave == 12)
+        {
+            bossMaxHP = 400f;
+            bossDamage = 60f;
+        }
+        else if (currentWave == 18)
+        {
+            bossMaxHP = 500f;
+            bossDamage = 70f;
+        }
+        else
+        {
+            // Dynamic formula fallback for other waves
+            bossMaxHP = 300f + Mathf.Max(0, Mathf.FloorToInt((currentWave - 6) / 6f) * 100f);
+            bossDamage = 50f + Mathf.Max(0, Mathf.FloorToInt((currentWave - 6) / 6f) * 10f);
         }
 
         // Bind death listener and configure HP
@@ -206,6 +231,14 @@ public class WaveManager : MonoBehaviour
         {
             health.SetMaxHealth(bossMaxHP);
             health.onDeath.AddListener(() => OnEnemyKilled());
+        }
+
+        // Configure Attack Damage on Boss_AI
+        Boss_AI bossAI = boss.GetComponent<Boss_AI>();
+        if (bossAI != null)
+        {
+            bossAI.SetDamageAmount(bossDamage);
+            Debug.Log($"WaveManager: Spawned boss on Wave {currentWave} with {bossMaxHP} HP and {bossDamage} Damage.");
         }
     }
 
@@ -251,17 +284,67 @@ public class WaveManager : MonoBehaviour
                 {
                     bossUpgradeUI = UnityEngine.Object.FindAnyObjectByType<BossUpgradeUI>();
                 }
-
-                if (bossUpgradeUI != null)
+                if (elementalSelectionUI == null)
                 {
-                    bossUpgradeUI.ShowUpgradeScreen(() => {
-                        StartCoroutine(StartCooldown());
-                    });
+                    elementalSelectionUI = UnityEngine.Object.FindAnyObjectByType<ElementalSelectionUI>();
+                }
+
+                if (currentWave == 6)
+                {
+                    // First boss defeated -> show elemental selection, then boss upgrade
+                    if (elementalSelectionUI != null)
+                    {
+                        elementalSelectionUI.ShowSelectionScreen(() => {
+                            if (bossUpgradeUI != null)
+                            {
+                                bossUpgradeUI.ShowUpgradeScreen(() => {
+                                    StartCoroutine(StartCooldown());
+                                });
+                            }
+                            else
+                            {
+                                StartCoroutine(StartCooldown());
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Debug.LogWarning("WaveManager: ElementalSelectionUI not found! Showing boss upgrade directly.");
+                        if (bossUpgradeUI != null)
+                        {
+                            bossUpgradeUI.ShowUpgradeScreen(() => {
+                                StartCoroutine(StartCooldown());
+                            });
+                        }
+                        else
+                        {
+                            StartCoroutine(StartCooldown());
+                        }
+                    }
                 }
                 else
                 {
-                    Debug.LogWarning("WaveManager: BossUpgradeUI not found! Starting cooldown directly.");
-                    StartCoroutine(StartCooldown());
+                    // Second boss or later
+                    if (currentWave == 12)
+                    {
+                        // Defeated second boss -> increase elemental chance and damage!
+                        if (PlayerElementalManager.Instance != null)
+                        {
+                            PlayerElementalManager.Instance.IsSecondBossDefeated = true;
+                            Debug.Log("WaveManager: Second Boss defeated! Elemental status upgraded.");
+                        }
+                    }
+
+                    if (bossUpgradeUI != null)
+                    {
+                        bossUpgradeUI.ShowUpgradeScreen(() => {
+                            StartCoroutine(StartCooldown());
+                        });
+                    }
+                    else
+                    {
+                        StartCoroutine(StartCooldown());
+                    }
                 }
             }
             else

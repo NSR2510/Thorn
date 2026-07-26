@@ -21,12 +21,34 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private Button winTryAgainButton;
     [SerializeField] private Button winMainMenuButton;
 
+    [Header("BGM Settings")]
+    [SerializeField] private AudioClip mainThemeSound;
+    private AudioSource bgmSource;
+
+    private const string MasterVolumeKey = "MasterVolume";
+    private const string IsMutedKey = "IsMuted";
+
     private Health playerHealth;
     private WaveManager waveManager;
 
     private void Start()
     {
-        // 1. Subscribe to Player's Death Event
+        // 1. Play main theme background music
+        if (mainThemeSound != null)
+        {
+            bgmSource = gameObject.AddComponent<AudioSource>();
+            bgmSource.clip = mainThemeSound;
+            bgmSource.loop = true;
+            bgmSource.playOnAwake = true;
+            bgmSource.ignoreListenerPause = true;
+            bgmSource.Play();
+            Debug.Log("GameUIManager: Started playing main theme background music.");
+        }
+
+        // Apply saved volume settings on startup
+        ApplyVolumes();
+
+        // 2. Subscribe to Player's Death Event
         playerHealth = Object.FindAnyObjectByType<Health>();
         if (playerHealth != null)
         {
@@ -37,7 +59,7 @@ public class GameUIManager : MonoBehaviour
             Debug.LogWarning("GameUIManager: Player Health component not found in scene.");
         }
 
-        // 2. Subscribe to WaveManager's Win Event
+        // 3. Subscribe to WaveManager's Win Event
         waveManager = Object.FindAnyObjectByType<WaveManager>();
         if (waveManager != null)
         {
@@ -48,14 +70,14 @@ public class GameUIManager : MonoBehaviour
             Debug.LogWarning("GameUIManager: WaveManager not found in scene.");
         }
 
-        // 3. Setup Button Listeners
+        // 4. Setup Button Listeners
         if (tutorialOkButton != null) tutorialOkButton.onClick.AddListener(DismissTutorial);
         if (deathTryAgainButton != null) deathTryAgainButton.onClick.AddListener(RestartGame);
         if (deathMainMenuButton != null) deathMainMenuButton.onClick.AddListener(LoadMainMenu);
         if (winTryAgainButton != null) winTryAgainButton.onClick.AddListener(RestartGame);
         if (winMainMenuButton != null) winMainMenuButton.onClick.AddListener(LoadMainMenu);
 
-        // 4. Initial UI State: Show Tutorial & Pause Game
+        // 5. Initial UI State: Show Tutorial & Pause Game
         if (tutorialPanel != null)
         {
             tutorialPanel.SetActive(true);
@@ -79,6 +101,20 @@ public class GameUIManager : MonoBehaviour
         if (waveManager != null)
         {
             waveManager.onGameWon.RemoveListener(OnGameWon);
+        }
+    }
+
+    public void ApplyVolumes()
+    {
+        float master = PlayerPrefs.GetFloat(MasterVolumeKey, 0.75f);
+        bool isMuted = PlayerPrefs.GetInt(IsMutedKey, 0) == 1;
+        if (isMuted)
+        {
+            AudioListener.volume = 0f;
+        }
+        else
+        {
+            AudioListener.volume = master;
         }
     }
 

@@ -12,6 +12,10 @@ public class Health : MonoBehaviour
     private float immunityTimer = 0f;
     private SpriteRenderer spriteRenderer;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip gruntSound;
+    private AudioSource audioSource;
+
     [Header("Events")]
     public UnityEvent<float, float> onHealthChanged; // passes currentHealth, maxHealth
     public UnityEvent onDeath;
@@ -34,6 +38,12 @@ public class Health : MonoBehaviour
         if (spriteRenderer == null)
         {
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        }
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
         }
     }
 
@@ -73,6 +83,11 @@ public class Health : MonoBehaviour
 
         currentHealth = Mathf.Max(0f, currentHealth - damage);
         onHealthChanged?.Invoke(currentHealth, maxHealth);
+
+        if (audioSource != null && gruntSound != null)
+        {
+            audioSource.PlayOneShot(gruntSound);
+        }
 
         if (currentHealth <= 0f)
         {

@@ -7,6 +7,10 @@ public class Boss_HP : MonoBehaviour
     [SerializeField] private float maxHealth = 200f;
     [SerializeField] private float currentHealth;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip gruntSound;
+    private AudioSource audioSource;
+
     [Header("Events")]
     public UnityEvent<float, float> onHealthChanged;
     public UnityEvent onDeath;
@@ -20,6 +24,11 @@ public class Boss_HP : MonoBehaviour
     private void Awake()
     {
         currentHealth = maxHealth;
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
     }
 
     public void TakeDamage(float damage)
@@ -28,6 +37,11 @@ public class Boss_HP : MonoBehaviour
 
         currentHealth = Mathf.Max(0f, currentHealth - damage);
         onHealthChanged?.Invoke(currentHealth, maxHealth);
+
+        if (audioSource != null && gruntSound != null)
+        {
+            audioSource.PlayOneShot(gruntSound);
+        }
 
         if (currentHealth <= 0f)
         {

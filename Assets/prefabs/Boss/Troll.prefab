@@ -314,6 +314,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Boss_HP
   maxHealth: 10
   currentHealth: 0
+  gruntSound: {fileID: 8300000, guid: da17c6b1e3fe9544281fdbb8acaf010c, type: 3}
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []
