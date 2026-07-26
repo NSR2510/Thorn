@@ -97,7 +97,7 @@ public class GameUIManager : MonoBehaviour
     public void RestartGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Main Game");
+        SceneManager.LoadScene("MainGame");
     }
 
     public void LoadMainMenu()
